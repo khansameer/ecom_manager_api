@@ -13,6 +13,34 @@ router.post('/create', (req, res) => {
     res.json({ id: result.insertId, ...store });
   });
 });
+
+router.get('/getorder', (req, res) => {
+  const { store_name } = req.query;
+
+  if (!store_name) {
+    return res.status(400).json({
+      status: false,
+      message: 'store_name is required in query parameters'
+    });
+  }
+
+  const query = 'SELECT * FROM orders WHERE store_name = ?';
+  db.query(query, [store_name], (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        status: false,
+        message: 'Database error',
+        error: err
+      });
+    }
+
+    res.json({
+      status: true,
+      count: results.length,
+      orders: results
+    });
+  });
+});
 // DELETE /contact-us/:id → Delete a message
 router.delete('/delete_order/:order_id', (req, res) => {
   const orderId = req.params.order_id;
