@@ -1,6 +1,4 @@
 // db.js
-
-/*
 const mysql = require('mysql2');
 
 const db = mysql.createPool({
@@ -21,8 +19,7 @@ db.getConnection((err, connection) => {
 });
 
 module.exports = db;
-*/
-const mysql = require('mysql2');
+/*const mysql = require('mysql2');
 
 const db = mysql.createPool({
   host: process.env.DB_HOST,
@@ -42,3 +39,4 @@ db.getConnection((err, connection) => {
 });
 
 module.exports = db;
+*/
