@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const fetch = require('node-fetch');
 const nodemailer = require('nodemailer');
+require('dotenv').config();
 //const fetch = require('node-fetch');
 const { EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_USER_ID } = require('../config.js');
 
