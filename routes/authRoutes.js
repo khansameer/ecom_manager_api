@@ -108,6 +108,9 @@ router.post('/generate-otp', async (req, res) => {
     if (email) {
       // ✅ Configure transporter (you can use Gmail or any SMTP service)
       const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+  port: 465, // secure port
+  secure: true,
         service: 'gmail', // or 'outlook', 'yahoo', etc.
         auth: {
           user: 'sameerflutter@gmail.com', // your email address
