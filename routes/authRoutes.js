@@ -160,14 +160,27 @@ router.post('/generate-otp', async (req, res) => {
     if (result.affectedRows === 0)
       return res.status(404).json({ message: 'No user found' });
 
-    // Send OTP using Gmail SMTP
+    // Send OTP using Gmail SMTP with detailed logging
     if (email) {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_PASS // Use Gmail App Password here
-        }
+          pass: process.env.GMAIL_PASS
+        },
+        connectionTimeout: 10000,
+        logger: true, // Enable Nodemailer internal logger
+        debug: true   // Show SMTP traffic in console
+      });
+
+      // Listen for Nodemailer logs
+      transporter.on('log', info => {
+        console.log('Nodemailer Log:', info);
+      });
+
+      // Listen for Nodemailer errors
+      transporter.on('error', err => {
+        console.error('Nodemailer Transport Error:', err);
       });
 
       const mailOptions = {
@@ -178,9 +191,32 @@ router.post('/generate-otp', async (req, res) => {
       };
 
       try {
-        await transporter.sendMail(mailOptions);
+        console.log('📤 Sending email to:', email);
+        console.log('📤 SMTP config:', transporter.options);
+
+        let info = await transporter.sendMail(mailOptions);
+
+        console.log('✅ Email sent:', info);
+        if (info.accepted && info.accepted.length > 0) {
+          console.log('📨 Accepted by:', info.accepted);
+        }
+        if (info.rejected && info.rejected.length > 0) {
+          console.log('🚫 Rejected by:', info.rejected);
+        }
+        if (info.response) {
+          console.log('📬 SMTP Response:', info.response);
+        }
       } catch (mailErr) {
         console.error('❌ Email send error:', mailErr);
+        if (mailErr.response) {
+          console.error('SMTP Response:', mailErr.response);
+        }
+        if (mailErr.code) {
+          console.error('SMTP Error Code:', mailErr.code);
+        }
+        if (mailErr.command) {
+          console.error('SMTP Command:', mailErr.command);
+        }
         return res.status(500).json({ message: 'Failed to send OTP email', error: mailErr.toString() });
       }
     }
