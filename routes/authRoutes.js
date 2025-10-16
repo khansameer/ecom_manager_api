@@ -2,12 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 //const fetch = require('node-fetch');
-
-// EmailJS config
-const EMAILJS_SERVICE_ID = 'service_q3x803q';
-const EMAILJS_TEMPLATE_ID = 'template_qh9hhmd';
-const EMAILJS_USER_ID = 'BdeTStneobP-p2DNW';
-
+const axios = require('axios');  // ✅ use require, not import
+const { EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_USER_ID } = require('../config.js');
 // Utility to run db queries as Promise
 const queryAsync = (sql, params) => new Promise((resolve, reject) => {
   db.query(sql, params, (err, result) => err ? reject(err) : resolve(result));
@@ -33,7 +29,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Generate OTP
 router.post('/generate-otp', async (req, res) => {
   try {
     const { email, mobile } = req.body;
@@ -58,25 +53,20 @@ router.post('/generate-otp', async (req, res) => {
     const result = await queryAsync(query, params);
     if (result.affectedRows === 0) return res.status(404).json({ message: 'No user found' });
 
-    // Send OTP via EmailJS
-    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+     if (email) {
+      await axios.post('https://api.emailjs.com/api/v1.0/email/send', {
         service_id: EMAILJS_SERVICE_ID,
         template_id: EMAILJS_TEMPLATE_ID,
         user_id: EMAILJS_USER_ID,
         template_params: { email, passcode: otp, time: '15 minutes' }
-      })
-    });
-
+      }, { headers: { 'Content-Type': 'application/json' } });
+    }
     res.json({ message: 'OTP sent successfully', otp });
   } catch (error) {
-    console.error(error);
+    console.error(error.message);
     res.status(500).json({ message: 'Error sending OTP', error: error.toString() });
   }
 });
-
 // Verify OTP
 router.post('/verify-otp', async (req, res) => {
   try {
