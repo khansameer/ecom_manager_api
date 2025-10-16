@@ -1,9 +1,20 @@
 const express = require('express');
 const router = express.Router();
+const nodemailer = require('nodemailer');
 const db = require('../db');
 //const fetch = require('node-fetch');
 const axios = require('axios');  // ✅ use require, not import
-const { EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_USER_ID } = require('../config.js');
+//const { EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_USER_ID } = require('./config.js');
+
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'sameerflutter@gmail.com',       // replace with your Gmail
+    pass: 'Sameer@007'           // generate App Password from Gmail settings
+  }
+});
+
 // Utility to run db queries as Promise
 const queryAsync = (sql, params) => new Promise((resolve, reject) => {
   db.query(sql, params, (err, result) => err ? reject(err) : resolve(result));
@@ -29,7 +40,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/generate-otp', async (req, res) => {
+/*router.post('/generate-otp', async (req, res) => {
   try {
     const { email, mobile } = req.body;
     if (!email && !mobile) return res.status(400).json({ message: 'Email or mobile required' });
@@ -64,6 +75,51 @@ router.post('/generate-otp', async (req, res) => {
     res.json({ message: 'OTP sent successfully', otp });
   } catch (error) {
     console.error(error.message);
+    res.status(500).json({ message: 'Error sending OTP', error: error.toString() });
+  }
+});
+*/
+
+router.post('/generate-otp', async (req, res) => {
+  try {
+    const { email, mobile } = req.body;
+    if (!email && !mobile) return res.status(400).json({ message: 'Email or mobile required' });
+
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    let query = 'UPDATE user SET otp = ? WHERE ';
+    const params = [otp];
+
+    if (email && mobile) {
+      query += 'email = ? OR mobile = ?';
+      params.push(email, mobile);
+    } else if (email) {
+      query += 'email = ?';
+      params.push(email);
+    } else {
+      query += 'mobile = ?';
+      params.push(mobile);
+    }
+
+    const result = await queryAsync(query, params);
+    if (result[0].affectedRows === 0) return res.status(404).json({ message: 'No user found' });
+
+    // Send OTP via email if email is provided
+    if (email) {
+      await transporter.sendMail({
+        from: '"ECom Manager" sameerflutter@gmail.com',
+        to: email,
+        subject: 'Your OTP Code',
+        text: `Your OTP is ${otp}. It is valid for 15 minutes.`,
+        html: `<p>Your OTP is <b>${otp}</b>. It is valid for 15 minutes.</p>`
+      });
+    }
+
+    // Optional: Send SMS if mobile (use SMS API here)
+
+    res.json({ message: 'OTP sent successfully', otp });
+  } catch (error) {
+    console.error('Error generating OTP:', error.message);
     res.status(500).json({ message: 'Error sending OTP', error: error.toString() });
   }
 });
