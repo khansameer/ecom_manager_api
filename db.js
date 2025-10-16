@@ -1,12 +1,20 @@
 // db.js
 const mysql = require('mysql2');
 
-const db = mysql.createPool({
+/*const db = mysql.createPool({
   host: '72.60.29.59',
   user: 'mteam',
   password: 'Mteam^2025',
   database: 'emanager',
   port: 3306
+});*/
+
+const db = mysql.createPool({
+  host: 'shuttle.proxy.rlwy.net',
+  user: 'root',
+  password: 'mxOyHLloGEakAHIqipMyDciYtMAGRlyb',
+  database: 'railway',
+  port: 42621
 });
 
 db.getConnection((err, connection) => {
