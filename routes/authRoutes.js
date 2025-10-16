@@ -111,10 +111,12 @@ router.post('/generate-otp', async (req, res) => {
         host: 'smtp.gmail.com',
   port: 465, // secure port
   secure: true,
-      //  service: 'gmail', // or 'outlook', 'yahoo', etc.
+        service: 'gmail', // or 'outlook', 'yahoo', etc.
         auth: {
-          user: "sameerflutter@gmail.com",
-    pass: "hrfa lcxt xcgs hxhf"
+          user: process.env.GMAIL_USER,
+pass: process.env.GMAIL_PASS
+         // user: 'sameerflutter@gmail.com', // your email address
+         // pass: 'pulc nxyc jwkf litc'     // Gmail App Password (not your Gmail login)
         }
       });
 

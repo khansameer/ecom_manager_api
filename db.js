@@ -1,38 +1,11 @@
 // db.js
 const mysql = require('mysql2');
-
-/*const db = mysql.createPool({
-  host: '72.60.29.59',
-  user: 'mteam',
-  password: 'Mteam^2025',
-  database: 'emanager',
-  port: 3306
-});*/
-
-const db = mysql.createPool({
-  host: 'shuttle.proxy.rlwy.net',
-  user: 'root',
-  password: 'mxOyHLloGEakAHIqipMyDciYtMAGRlyb',
-  database: 'railway',
-  port: 42621
-});
-
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error('❌ Database connection failed:', err.message);
-  } else {
-    console.log('✅ Connected to MySQL database successfully!');
-    connection.release();
-  }
-});
-
-module.exports = db;
-/*const mysql = require('mysql2');
+require('dotenv').config(); // Load .env variables
 
 const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
-  password: process.env.DB_PASS,
+  password: process.env.DB_PASSWORD, // Use DB_PASSWORD as in .env
   database: process.env.DB_NAME,
   port: process.env.DB_PORT || 3306
 });
@@ -47,4 +20,3 @@ db.getConnection((err, connection) => {
 });
 
 module.exports = db;
-*/
