@@ -166,6 +166,7 @@ router.post('/generate-otp', async (req, res) => {
         host: 'smtp.gmail.com',
         port: 587,
         service: 'gmail',
+        requireTLS: true,
         auth: {
           user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_PASS
