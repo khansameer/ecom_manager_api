@@ -170,9 +170,9 @@ router.post('/generate-otp', async (req, res) => {
           user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_PASS
         },
-        connectionTimeout: 10000,
-        logger: true, // Enable Nodemailer internal logger
-        debug: true   // Show SMTP traffic in console
+        // connectionTimeout: 10000,
+        // logger: true, // Enable Nodemailer internal logger
+        // debug: true   // Show SMTP traffic in console
       });
 
       // Listen for Nodemailer logs
