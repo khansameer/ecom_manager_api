@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const fetch = require('node-fetch');
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 require('dotenv').config();
 //const fetch = require('node-fetch');
 const { EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_USER_ID } = require('../config.js');
@@ -83,10 +84,8 @@ router.post('/generate-otp', async (req, res) => {
     if (!email && !mobile)
       return res.status(400).json({ message: 'Email or mobile required' });
 
-    // Generate a 4-digit OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-    // Update the OTP in the database
     let query = 'UPDATE user SET otp = ? WHERE ';
     const params = [otp];
 
@@ -105,32 +104,23 @@ router.post('/generate-otp', async (req, res) => {
     if (result.affectedRows === 0)
       return res.status(404).json({ message: 'No user found' });
 
-    // Send OTP using Nodemailer (only if email is provided)
+    // Send OTP using Resend (only if email is provided)
     if (email) {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_PASS
-        }
-      });
-
-      const mailOptions = {
-        from: `"ECom Manager" <${process.env.GMAIL_USER}>`, // must be a valid email
-        to: email,
-        subject: 'OTP for your ECom Manager authentication',
-        html: `
-          <p>To authenticate, please use the following One Time Password (OTP):</p>
-          <h1 style="color: blue;">${otp}</h1>
-          <p>This OTP will be valid for <b>15 minutes</b>.</p>
-          <p>Do not share this OTP with anyone. If you didn't make this request, you can safely ignore this email.</p>
-          <p><b>ECom Manager</b> will never contact you about this email or ask for any login codes or links. Beware of phishing scams.</p>
-          <p>Thanks for visiting <b>ECom Manager</b>!</p>
-        `
-      };
-
+      const resend = new Resend(process.env.RESEND_API_KEY);
       try {
-        await transporter.sendMail(mailOptions);
+        await resend.emails.send({
+          from: 'ECom Manager <onboarding@resend.dev>',
+          to: email,
+          subject: 'OTP for your ECom Manager authentication',
+          html: `
+            <p>To authenticate, please use the following One Time Password (OTP):</p>
+            <h1 style="color: blue;">${otp}</h1>
+            <p>This OTP will be valid for <b>15 minutes</b>.</p>
+            <p>Do not share this OTP with anyone. If you didn't make this request, you can safely ignore this email.</p>
+            <p><b>ECom Manager</b> will never contact you about this email or ask for any login codes or links. Beware of phishing scams.</p>
+            <p>Thanks for visiting <b>ECom Manager</b>!</p>
+          `
+        });
       } catch (mailErr) {
         console.error('❌ Email send error:', mailErr);
         return res.status(500).json({ message: 'Failed to send OTP email', error: mailErr.toString() });
@@ -143,7 +133,6 @@ router.post('/generate-otp', async (req, res) => {
     res.status(500).json({ message: 'Error sending OTP', error: error.toString() });
   }
 });
-
 // Verify OTP
 router.post('/verify-otp', async (req, res) => {
   try {
