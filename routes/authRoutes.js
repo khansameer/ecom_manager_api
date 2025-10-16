@@ -78,7 +78,7 @@ router.post('/login', async (req, res) => {
   }
 });*/
 
-router.post('/generate-otp', async (req, res) => {
+/*router.post('/generate-otp', async (req, res) => {
   try {
     const { email, mobile } = req.body;
     if (!email && !mobile)
@@ -121,6 +121,64 @@ router.post('/generate-otp', async (req, res) => {
             <p>Thanks for visiting <b>ECom Manager</b>!</p>
           `
         });
+      } catch (mailErr) {
+        console.error('❌ Email send error:', mailErr);
+        return res.status(500).json({ message: 'Failed to send OTP email', error: mailErr.toString() });
+      }
+    }
+
+    res.json({ message: 'OTP sent successfully', otp });
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    res.status(500).json({ message: 'Error sending OTP', error: error.toString() });
+  }
+});*/
+
+router.post('/generate-otp', async (req, res) => {
+  try {
+    const { email, mobile } = req.body;
+    if (!email && !mobile)
+      return res.status(400).json({ message: 'Email or mobile required' });
+
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    let query = 'UPDATE user SET otp = ? WHERE ';
+    const params = [otp];
+
+    if (email && mobile) {
+      query += 'email = ? OR mobile = ?';
+      params.push(email, mobile);
+    } else if (email) {
+      query += 'email = ?';
+      params.push(email);
+    } else {
+      query += 'mobile = ?';
+      params.push(mobile);
+    }
+
+    const result = await queryAsync(query, params);
+    if (result.affectedRows === 0)
+      return res.status(404).json({ message: 'No user found' });
+
+    // Send OTP using Gmail SMTP
+    if (email) {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_PASS // Use Gmail App Password here
+        }
+      });
+
+      const mailOptions = {
+        from: `"ECom Manager" <${process.env.GMAIL_USER}>`,
+        to: email,
+        subject: 'OTP for your ECom Manager authentication',
+        html: `<h1>Your OTP is: ${otp}</h1>`
+      };
+
+      try {
+        await transporter.sendMail(mailOptions);
       } catch (mailErr) {
         console.error('❌ Email send error:', mailErr);
         return res.status(500).json({ message: 'Failed to send OTP email', error: mailErr.toString() });
