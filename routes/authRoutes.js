@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 //const fetch = require('node-fetch');
 
+// EmailJS config
 const EMAILJS_SERVICE_ID = 'service_q3x803q';
 const EMAILJS_TEMPLATE_ID = 'template_qh9hhmd';
 const EMAILJS_USER_ID = 'BdeTStneobP-p2DNW';
@@ -16,31 +17,22 @@ const queryAsync = (sql, params) => new Promise((resolve, reject) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, mobile } = req.body;
+    if (!email || !mobile) return res.status(400).json({ message: 'Email and mobile are required' });
 
-    // Check both are provided
-    if (!email || !mobile) {
-      return res.status(400).json({ message: 'Email and mobile are required' });
-    }
-
-    // Query with AND to ensure both match
     const users = await queryAsync(
       'SELECT * FROM user WHERE email = ? AND mobile = ?',
       [email, mobile]
     );
 
-    if (users.length === 0) {
-      // No record matches both email and mobile
-      return res.status(401).json({ message: 'Invalid email or mobile' });
-    }
+    if (users.length === 0) return res.status(401).json({ message: 'Invalid email or mobile' });
 
-    // Success → return the user
     res.json(users[0]);
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error', error: err });
   }
 });
+
 // Generate OTP
 router.post('/generate-otp', async (req, res) => {
   try {
@@ -49,9 +41,9 @@ router.post('/generate-otp', async (req, res) => {
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-    // Build dynamic query
     let query = 'UPDATE user SET otp = ? WHERE ';
     const params = [otp];
+
     if (email && mobile) {
       query += 'email = ? OR mobile = ?';
       params.push(email, mobile);
@@ -60,7 +52,6 @@ router.post('/generate-otp', async (req, res) => {
       params.push(email);
     } else {
       query += 'mobile = ?';
-	  
       params.push(mobile);
     }
 
@@ -109,4 +100,5 @@ router.post('/verify-otp', async (req, res) => {
   }
 });
 
+// ✅ Export as named export
 module.exports = router;

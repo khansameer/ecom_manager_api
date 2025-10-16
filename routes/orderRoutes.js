@@ -17,15 +17,16 @@ router.post('/create', (req, res) => {
 router.get('/getorder', (req, res) => {
   const { store_name } = req.query;
 
-  if (!store_name) {
-    return res.status(400).json({
-      status: false,
-      message: 'store_name is required in query parameters'
-    });
+  // If store_name exists, filter by it. Otherwise, get all orders.
+  let query = 'SELECT * FROM orders';
+  let params = [];
+
+  if (store_name) {
+    query += ' WHERE store_name = ?';
+    params.push(store_name);
   }
 
-  const query = 'SELECT * FROM orders WHERE store_name = ?';
-  db.query(query, [store_name], (err, results) => {
+  db.query(query, params, (err, results) => {
     if (err) {
       return res.status(500).json({
         status: false,

@@ -4,7 +4,6 @@ const router = express.Router();
 const db = require('../db');
 const axios = require("axios");
 
-
 // ✅ Get all store names with ID and user count
 router.get('/store_list', (req, res) => {
   const query = `

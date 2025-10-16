@@ -5,7 +5,7 @@ const db = require('../db');
 
 // Create user
 // POST /user → Insert user
-router.post('/', async (req, res) => {
+router.post('/', (req, res) => {
   const { email, name, mobile, ...rest } = req.body;
 
   if (!email || !name) {
@@ -31,13 +31,13 @@ router.post('/', async (req, res) => {
   });
 });
 // Get all users
-router.get('/', async (req, res) => {
+router.get('/', (req, res) => {
   db.query('SELECT * FROM user', (err, results) => {
     if (err) return res.status(500).json(err);
     res.json(results);
   });
 });
-router.get('/count',async  (req, res) => {
+router.get('/count', (req, res) => {
   const { store_name } = req.query;
 
   let query;
@@ -55,7 +55,7 @@ router.get('/count',async  (req, res) => {
     res.json(results);
   });
 });  
-router.get('/count_all',async  (req, res) => {
+router.get('/count_all', (req, res) => {
   const queries = {
     users: 'SELECT COUNT(*) AS count FROM user',
     orders: 'SELECT COUNT(*) AS count FROM orders',
@@ -89,7 +89,7 @@ router.get('/count_all',async  (req, res) => {
   });
 });
 // Get user by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', (req, res) => {
   db.query('SELECT * FROM user WHERE id = ?', [req.params.id], (err, result) => {
     if (err) return res.status(500).json(err);
     if (result.length === 0)
@@ -99,7 +99,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update active_status
-router.put('/:id/status', async (req, res) => {
+router.put('/:id/status', (req, res) => {
   const { active_status } = req.body;
   db.query('UPDATE user SET active_status = ? WHERE id = ?', [active_status, req.params.id], (err, result) => {
     if (err) return res.status(500).json(err);
@@ -110,7 +110,7 @@ router.put('/:id/status', async (req, res) => {
 });
 
 // Update FCM token
-router.put('/:id/fcmToken',async  (req, res) => {
+router.put('/:id/fcmToken', (req, res) => {
   const { fcm_token } = req.body;
   db.query('UPDATE user SET fcm_token = ? WHERE id = ?', [fcm_token, req.params.id], (err, result) => {
     if (err) return res.status(500).json(err);
@@ -119,7 +119,7 @@ router.put('/:id/fcmToken',async  (req, res) => {
 });
 
 // Delete user
-router.delete('/:id',async  (req, res) => {
+router.delete('/:id', (req, res) => {
   db.query('DELETE FROM user WHERE id = ?', [req.params.id], (err, result) => {
     if (err) return res.status(500).json(err);
     if (result.affectedRows === 0)
