@@ -163,6 +163,8 @@ router.post('/generate-otp', async (req, res) => {
     // Send OTP using Gmail SMTP with detailed logging
     if (email) {
       const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
         service: 'gmail',
         auth: {
           user: process.env.GMAIL_USER,
