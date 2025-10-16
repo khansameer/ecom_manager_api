@@ -107,37 +107,34 @@ router.post('/generate-otp', async (req, res) => {
 
     // Send OTP using Nodemailer (only if email is provided)
     if (email) {
-      // ✅ Configure transporter (you can use Gmail or any SMTP service)
       const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-  port: 465, // secure port
-  secure: true,
-        service: 'gmail', // or 'outlook', 'yahoo', etc.
+        service: 'gmail',
         auth: {
           user: process.env.GMAIL_USER,
-pass: process.env.GMAIL_PASS
-         // user: 'sameerflutter@gmail.com', // your email address
-         // pass: 'pulc nxyc jwkf litc'     // Gmail App Password (not your Gmail login)
+          pass: process.env.GMAIL_PASS
         }
       });
 
-      // ✅ Compose the email
       const mailOptions = {
-        from: 'ECom Manager',
+        from: `"ECom Manager" <${process.env.GMAIL_USER}>`, // must be a valid email
         to: email,
         subject: 'OTP for your ECom Manager authentication',
         html: `
-         <p>To authenticate, please use the following One Time Password (OTP):</p>
-      <h1 style="color: blue;">${otp}</h1>
-      <p>This OTP will be valid for <b>15 minutes</b>.</p>
-      <p>Do not share this OTP with anyone. If you didn't make this request, you can safely ignore this email.</p>
-      <p><b>ECom Manager</b> will never contact you about this email or ask for any login codes or links. Beware of phishing scams.</p>
-      <p>Thanks for visiting <b>ECom Manager</b>!</p>
+          <p>To authenticate, please use the following One Time Password (OTP):</p>
+          <h1 style="color: blue;">${otp}</h1>
+          <p>This OTP will be valid for <b>15 minutes</b>.</p>
+          <p>Do not share this OTP with anyone. If you didn't make this request, you can safely ignore this email.</p>
+          <p><b>ECom Manager</b> will never contact you about this email or ask for any login codes or links. Beware of phishing scams.</p>
+          <p>Thanks for visiting <b>ECom Manager</b>!</p>
         `
       };
 
-      // ✅ Send the email
-      await transporter.sendMail(mailOptions);
+      try {
+        await transporter.sendMail(mailOptions);
+      } catch (mailErr) {
+        console.error('❌ Email send error:', mailErr);
+        return res.status(500).json({ message: 'Failed to send OTP email', error: mailErr.toString() });
+      }
     }
 
     res.json({ message: 'OTP sent successfully', otp });
