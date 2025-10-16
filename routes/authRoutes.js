@@ -78,7 +78,7 @@ router.post('/login', async (req, res) => {
   }
 });*/
 
-/*router.post('/generate-otp', async (req, res) => {
+router.post('/generate-otp', async (req, res) => {
   try {
     const { email, mobile } = req.body;
     if (!email && !mobile)
@@ -132,9 +132,9 @@ router.post('/login', async (req, res) => {
     console.error('Error sending OTP:', error);
     res.status(500).json({ message: 'Error sending OTP', error: error.toString() });
   }
-});*/
+});
 
-router.post('/generate-otp', async (req, res) => {
+/*router.post('/generate-otp', async (req, res) => {
   try {
     const { email, mobile } = req.body;
     if (!email && !mobile)
@@ -231,6 +231,8 @@ router.post('/generate-otp', async (req, res) => {
     res.status(500).json({ message: 'Error sending OTP', error: error.toString() });
   }
 });
+
+*/
 // Verify OTP
 router.post('/verify-otp', async (req, res) => {
   try {
