@@ -1,19 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
 const db = require('../db');
+const fetch = require('node-fetch');
+const nodemailer = require('nodemailer');
 //const fetch = require('node-fetch');
-const axios = require('axios');  // ✅ use require, not import
-//const { EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_USER_ID } = require('./config.js');
+const { EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_USER_ID } = require('../config.js');
 
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'sameerflutter@gmail.com',       // replace with your Gmail
-    pass: 'Sameer@007'           // generate App Password from Gmail settings
-  }
-});
 
 // Utility to run db queries as Promise
 const queryAsync = (sql, params) => new Promise((resolve, reject) => {
@@ -40,12 +32,19 @@ router.post('/login', async (req, res) => {
   }
 });
 
+
+
 /*router.post('/generate-otp', async (req, res) => {
   try {
-    const { email, mobile } = req.body;
-    if (!email && !mobile) return res.status(400).json({ message: 'Email or mobile required' });
+    const { email, mobile, otp } = req.body;
 
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    if (!email && !mobile) {
+      return res.status(400).json({ message: 'Email or mobile required' });
+    }
+
+    if (!otp) {
+      return res.status(400).json({ message: 'OTP required from app side' });
+    }
 
     let query = 'UPDATE user SET otp = ? WHERE ';
     const params = [otp];
@@ -62,31 +61,31 @@ router.post('/login', async (req, res) => {
     }
 
     const result = await queryAsync(query, params);
-    if (result.affectedRows === 0) return res.status(404).json({ message: 'No user found' });
-
-     if (email) {
-      await axios.post('https://api.emailjs.com/api/v1.0/email/send', {
-        service_id: EMAILJS_SERVICE_ID,
-        template_id: EMAILJS_TEMPLATE_ID,
-        user_id: EMAILJS_USER_ID,
-        template_params: { email, passcode: otp, time: '15 minutes' }
-      }, { headers: { 'Content-Type': 'application/json' } });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'No user found to update' });
     }
-    res.json({ message: 'OTP sent successfully', otp });
+
+      res.json({
+      message: 'OTP updated successfully',
+      email: email || null,
+      mobile: mobile || null
+    });
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Error sending OTP', error: error.toString() });
+    console.error(error);
+    res.status(500).json({ message: 'Error updating OTP', error: error.toString() });
   }
-});
-*/
+});*/
 
 router.post('/generate-otp', async (req, res) => {
   try {
     const { email, mobile } = req.body;
-    if (!email && !mobile) return res.status(400).json({ message: 'Email or mobile required' });
+    if (!email && !mobile)
+      return res.status(400).json({ message: 'Email or mobile required' });
 
+    // Generate a 4-digit OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
+    // Update the OTP in the database
     let query = 'UPDATE user SET otp = ? WHERE ';
     const params = [otp];
 
@@ -102,27 +101,46 @@ router.post('/generate-otp', async (req, res) => {
     }
 
     const result = await queryAsync(query, params);
-    if (result[0].affectedRows === 0) return res.status(404).json({ message: 'No user found' });
+    if (result.affectedRows === 0)
+      return res.status(404).json({ message: 'No user found' });
 
-    // Send OTP via email if email is provided
+    // Send OTP using Nodemailer (only if email is provided)
     if (email) {
-      await transporter.sendMail({
-        from: '"ECom Manager" sameerflutter@gmail.com',
-        to: email,
-        subject: 'Your OTP Code',
-        text: `Your OTP is ${otp}. It is valid for 15 minutes.`,
-        html: `<p>Your OTP is <b>${otp}</b>. It is valid for 15 minutes.</p>`
+      // ✅ Configure transporter (you can use Gmail or any SMTP service)
+      const transporter = nodemailer.createTransport({
+        service: 'gmail', // or 'outlook', 'yahoo', etc.
+        auth: {
+          user: 'sameerflutter@gmail.com', // your email address
+          pass: 'pvyj xocw gekj ymyi'     // Gmail App Password (not your Gmail login)
+        }
       });
-    }
 
-    // Optional: Send SMS if mobile (use SMS API here)
+      // ✅ Compose the email
+      const mailOptions = {
+        from: 'ECom Manager',
+        to: email,
+        subject: 'OTP for your ECom Manager authentication',
+        html: `
+         <p>To authenticate, please use the following One Time Password (OTP):</p>
+      <h1 style="color: blue;">${otp}</h1>
+      <p>This OTP will be valid for <b>15 minutes</b>.</p>
+      <p>Do not share this OTP with anyone. If you didn't make this request, you can safely ignore this email.</p>
+      <p><b>ECom Manager</b> will never contact you about this email or ask for any login codes or links. Beware of phishing scams.</p>
+      <p>Thanks for visiting <b>ECom Manager</b>!</p>
+        `
+      };
+
+      // ✅ Send the email
+      await transporter.sendMail(mailOptions);
+    }
 
     res.json({ message: 'OTP sent successfully', otp });
   } catch (error) {
-    console.error('Error generating OTP:', error.message);
+    console.error('Error sending OTP:', error);
     res.status(500).json({ message: 'Error sending OTP', error: error.toString() });
   }
 });
+
 // Verify OTP
 router.post('/verify-otp', async (req, res) => {
   try {
